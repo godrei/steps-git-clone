@@ -7,7 +7,7 @@ import (
 	"github.com/bitrise-io/go-steputils/tools"
 	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/log"
-	"github.com/bitrise-steplib/steps-git-clone/gitcloneinternal"
+	gitcloneinternal "github.com/bitrise-steplib/steps-git-clone/internal/gitclone"
 )
 
 const (

@@ -5,7 +5,7 @@ import (
 
 	"github.com/bitrise-io/go-steputils/stepconf"
 	"github.com/bitrise-io/go-utils/log"
-	"github.com/bitrise-steplib/steps-git-clone/gitclone"
+	"github.com/bitrise-steplib/steps-git-clone/pkg/gitclone"
 )
 
 func failf(format string, v ...interface{}) {
