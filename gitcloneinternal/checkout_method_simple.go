@@ -1,4 +1,4 @@
-package gitclone
+package gitcloneinternal
 
 import (
 	"fmt"
@@ -42,10 +42,10 @@ type checkoutCommit struct {
 }
 
 func (c checkoutCommit) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
-	remote := originRemoteName
+	remote := OriginRemoteName
 	if c.params.SourceRepoURL != "" {
-		remote = forkRemoteName
-		if err := runner.Run(gitCmd.RemoteAdd(forkRemoteName, c.params.SourceRepoURL)); err != nil {
+		remote = ForkRemoteName
+		if err := Runner.Run(gitCmd.RemoteAdd(ForkRemoteName, c.params.SourceRepoURL)); err != nil {
 			return fmt.Errorf("adding remote fork repository failed (%s): %v", c.params.SourceRepoURL, err)
 		}
 	}
@@ -85,7 +85,7 @@ type checkoutBranch struct {
 
 func (c checkoutBranch) do(gitCmd git.Git, fetchOptions fetchOptions, _ fallbackRetry) error {
 	branchRef := refsHeadsPrefix + c.params.Branch
-	if err := fetchInitialBranch(gitCmd, originRemoteName, branchRef, fetchOptions); err != nil {
+	if err := fetchInitialBranch(gitCmd, OriginRemoteName, branchRef, fetchOptions); err != nil {
 		return err
 	}
 
@@ -116,7 +116,7 @@ type checkoutTag struct {
 
 func (c checkoutTag) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
 	ref := fmt.Sprintf("refs/tags/%s:refs/tags/%s", c.params.Tag, c.params.Tag)
-	if err := fetch(gitCmd, originRemoteName, ref, fetchOptions); err != nil {
+	if err := fetch(gitCmd, OriginRemoteName, ref, fetchOptions); err != nil {
 		return err
 	}
 

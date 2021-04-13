@@ -1,4 +1,4 @@
-package gitclone
+package gitcloneinternal
 
 import (
 	"fmt"
@@ -28,7 +28,7 @@ func NewPRManualMergeParams(sourceBranch, commit, sourceRepoURL, destBranch stri
 	}
 
 	if sourceRepoURL != "" {
-		prManualMergeParams.SourceMergeArg = fmt.Sprintf("%s/%s", forkRemoteName, sourceBranch)
+		prManualMergeParams.SourceMergeArg = fmt.Sprintf("%s/%s", ForkRemoteName, sourceBranch)
 		prManualMergeParams.SourceRepoURL = sourceRepoURL
 	} else {
 		prManualMergeParams.SourceMergeArg = commit
@@ -61,11 +61,11 @@ type checkoutPRManualMerge struct {
 func (c checkoutPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
 	// Fetch and checkout destinations branch
 	destBranchRef := refsHeadsPrefix + c.params.DestinationBranch
-	if err := fetchInitialBranch(gitCmd, originRemoteName, destBranchRef, fetchOptions); err != nil {
+	if err := fetchInitialBranch(gitCmd, OriginRemoteName, destBranchRef, fetchOptions); err != nil {
 		return err
 	}
 
-	commitHash, err := runner.RunForOutput(gitCmd.Log("%H"))
+	commitHash, err := Runner.RunForOutput(gitCmd.Log("%H"))
 	if err != nil {
 		log.Errorf("log commit hash: %v", err)
 	}
@@ -73,15 +73,15 @@ func (c checkoutPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions, fal
 
 	var remoteName string
 	if c.params.SourceRepoURL != "" {
-		remoteName = forkRemoteName
+		remoteName = ForkRemoteName
 
 		// Add fork remote
-		if err := runner.Run(gitCmd.RemoteAdd(forkRemoteName, c.params.SourceRepoURL)); err != nil {
+		if err := Runner.Run(gitCmd.RemoteAdd(ForkRemoteName, c.params.SourceRepoURL)); err != nil {
 			return fmt.Errorf("adding remote fork repository failed (%s): %v", c.params.SourceRepoURL, err)
 		}
 
 	} else {
-		remoteName = originRemoteName
+		remoteName = OriginRemoteName
 	}
 
 	// Fetch and merge

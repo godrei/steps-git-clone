@@ -1,4 +1,4 @@
-package gitclone
+package gitcloneinternal
 
 import (
 	"errors"

@@ -1,4 +1,4 @@
-package gitclone
+package gitcloneinternal
 
 import (
 	"errors"
@@ -141,7 +141,7 @@ func Test_handleCheckoutError(t *testing.T) {
 			args: args{
 				callback: func() (map[string][]string, error) {
 					return map[string][]string{
-						originRemoteName: {"master", "develop"},
+						OriginRemoteName: {"master", "develop"},
 					}, nil
 				},
 				tag:      "checkout_failed",
@@ -192,7 +192,7 @@ func Test_handleCheckoutError(t *testing.T) {
 			args: args{
 				callback: func() (map[string][]string, error) {
 					return map[string][]string{
-						originRemoteName: {"master", "develop", "test"},
+						OriginRemoteName: {"master", "develop", "test"},
 					}, nil
 				},
 				tag:      "checkout_failed",

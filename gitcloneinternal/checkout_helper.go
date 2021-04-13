@@ -1,4 +1,4 @@
-package gitclone
+package gitcloneinternal
 
 import (
 	"fmt"
@@ -38,7 +38,7 @@ const (
 
 func fetch(gitCmd git.Git, remote string, ref string, traits fetchOptions) error {
 	var opts []string
-	opts = append(opts, jobsFlag)
+	opts = append(opts, JobsFlag)
 
 	if traits.depth != 0 {
 		opts = append(opts, "--depth="+strconv.Itoa(traits.depth))
@@ -65,7 +65,7 @@ func fetch(gitCmd git.Git, remote string, ref string, traits fetchOptions) error
 		branch = strings.TrimPrefix(ref, refsHeadsPrefix)
 	}
 
-	if err := runner.RunWithRetry(func() *command.Model {
+	if err := Runner.RunWithRetry(func() *command.Model {
 		return gitCmd.Fetch(opts...)
 	}); err != nil {
 		return handleCheckoutError(
@@ -81,14 +81,14 @@ func fetch(gitCmd git.Git, remote string, ref string, traits fetchOptions) error
 }
 
 func checkoutWithCustomRetry(gitCmd git.Git, arg string, retry fallbackRetry) error {
-	if cErr := runner.Run(gitCmd.Checkout(arg)); cErr != nil {
+	if cErr := Runner.Run(gitCmd.Checkout(arg)); cErr != nil {
 		if retry != nil {
 			log.Warnf("Checkout failed (%s): %v", arg, cErr)
 			if err := retry.do(gitCmd); err != nil {
 				return err
 			}
 
-			return runner.Run(gitCmd.Checkout(arg))
+			return Runner.Run(gitCmd.Checkout(arg))
 		}
 
 		return fmt.Errorf("checkout failed (%s): %v", arg, cErr)
@@ -115,8 +115,8 @@ func fetchInitialBranch(gitCmd git.Git, remote string, branchRef string, fetchTr
 
 	// Update branch: 'git fetch' followed by a 'git merge' is the same as 'git pull'.
 	remoteBranch := fmt.Sprintf("%s/%s", remote, branch)
-	if err := runner.Run(gitCmd.Merge(remoteBranch)); err != nil {
-		return newStepError(
+	if err := Runner.Run(gitCmd.Merge(remoteBranch)); err != nil {
+		return NewStepError(
 			"update_branch_failed",
 			fmt.Errorf("updating branch (merge) failed %s: %v", branch, err),
 			"Updating branch failed",
@@ -127,14 +127,14 @@ func fetchInitialBranch(gitCmd git.Git, remote string, branchRef string, fetchTr
 }
 
 func mergeWithCustomRetry(gitCmd git.Git, arg string, retry fallbackRetry) error {
-	if mErr := runner.Run(gitCmd.Merge(arg)); mErr != nil {
+	if mErr := Runner.Run(gitCmd.Merge(arg)); mErr != nil {
 		if retry != nil {
 			log.Warnf("Merge failed (%s): %v", arg, mErr)
 			if err := retry.do(gitCmd); err != nil {
 				return err
 			}
 
-			return runner.Run(gitCmd.Merge(arg))
+			return Runner.Run(gitCmd.Merge(arg))
 		}
 
 		return fmt.Errorf("merge failed (%s): %v", arg, mErr)
@@ -144,8 +144,8 @@ func mergeWithCustomRetry(gitCmd git.Git, arg string, retry fallbackRetry) error
 }
 
 func detachHead(gitCmd git.Git) error {
-	if err := runner.Run(gitCmd.Checkout("--detach")); err != nil {
-		return newStepError(
+	if err := Runner.Run(gitCmd.Checkout("--detach")); err != nil {
+		return NewStepError(
 			"detach_head_failed",
 			fmt.Errorf("detaching head failed: %v", err),
 			"Detaching head failed",

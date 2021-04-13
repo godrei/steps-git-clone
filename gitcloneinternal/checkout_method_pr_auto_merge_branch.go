@@ -1,4 +1,4 @@
-package gitclone
+package gitcloneinternal
 
 import (
 	"fmt"
@@ -38,13 +38,13 @@ func (c checkoutPRMergeBranch) do(gitCmd git.Git, fetchOpts fetchOptions, fallba
 	// Check out initial branch (fetchInitialBranch part1)
 	// `git "fetch" "origin" "refs/heads/master"`
 	destBranchRef := refsHeadsPrefix + c.params.DestinationBranch
-	if err := fetch(gitCmd, originRemoteName, destBranchRef, fetchOpts); err != nil {
+	if err := fetch(gitCmd, OriginRemoteName, destBranchRef, fetchOpts); err != nil {
 		return err
 	}
 
 	// `git "fetch" "origin" "refs/pull/7/head:pull/7"`
 	headBranchRef := fetchArg(c.params.MergeBranch)
-	if err := fetch(gitCmd, originRemoteName, headBranchRef, fetchOpts); err != nil {
+	if err := fetch(gitCmd, OriginRemoteName, headBranchRef, fetchOpts); err != nil {
 		return err
 	}
 
@@ -54,8 +54,8 @@ func (c checkoutPRMergeBranch) do(gitCmd git.Git, fetchOpts fetchOptions, fallba
 	if err := checkoutWithCustomRetry(gitCmd, c.params.DestinationBranch, nil); err != nil {
 		return err
 	}
-	destBranchWithRemote := fmt.Sprintf("%s/%s", originRemoteName, c.params.DestinationBranch)
-	if err := runner.Run(gitCmd.Merge(destBranchWithRemote)); err != nil {
+	destBranchWithRemote := fmt.Sprintf("%s/%s", OriginRemoteName, c.params.DestinationBranch)
+	if err := Runner.Run(gitCmd.Merge(destBranchWithRemote)); err != nil {
 		return err
 	}
 

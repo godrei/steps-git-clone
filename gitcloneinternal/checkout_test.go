@@ -1,29 +1,29 @@
-package gitclone
+package gitcloneinternal
 
 import "testing"
 
 func Test_selectCheckoutMethod(t *testing.T) {
 	tests := []struct {
 		name        string
-		cfg         Config
+		cfg         CheckoutConfig
 		patchSource patchSource
 		want        CheckoutMethod
 	}{
 		{
 			name: "none",
-			cfg:  Config{},
+			cfg:  CheckoutConfig{},
 			want: CheckoutNoneMethod,
 		},
 		{
 			name: "commit",
-			cfg: Config{
+			cfg: CheckoutConfig{
 				Commit: "76a934a",
 			},
 			want: CheckoutCommitMethod,
 		},
 		{
 			name: "commit + branch",
-			cfg: Config{
+			cfg: CheckoutConfig{
 				Commit: "76a934ae",
 				Branch: "hcnarb",
 			},
@@ -31,21 +31,21 @@ func Test_selectCheckoutMethod(t *testing.T) {
 		},
 		{
 			name: "branch",
-			cfg: Config{
+			cfg: CheckoutConfig{
 				Branch: "hcnarb",
 			},
 			want: CheckoutBranchMethod,
 		},
 		{
 			name: "tag",
-			cfg: Config{
+			cfg: CheckoutConfig{
 				Tag: "gat",
 			},
 			want: CheckoutTagMethod,
 		},
 		{
 			name: "Checkout tag, branch specifed",
-			cfg: Config{
+			cfg: CheckoutConfig{
 				Tag:    "gat",
 				Branch: "hcnarb",
 			},
@@ -53,7 +53,7 @@ func Test_selectCheckoutMethod(t *testing.T) {
 		},
 		{
 			name: "UNSUPPORTED Checkout commit, tag, branch specifed",
-			cfg: Config{
+			cfg: CheckoutConfig{
 				Commit: "76a934ae",
 				Tag:    "gat",
 				Branch: "hcnarb",
@@ -62,7 +62,7 @@ func Test_selectCheckoutMethod(t *testing.T) {
 		},
 		{
 			name: "UNSUPPORTED Checkout commit, tag specifed",
-			cfg: Config{
+			cfg: CheckoutConfig{
 				Commit: "76a934ae",
 				Tag:    "gat",
 			},
@@ -70,7 +70,7 @@ func Test_selectCheckoutMethod(t *testing.T) {
 		},
 		{
 			name: "PR - no fork - manual merge: branch and commit",
-			cfg: Config{
+			cfg: CheckoutConfig{
 				Commit:        "76a934ae",
 				Branch:        "test/commit-messages",
 				PRMergeBranch: "pull/7/merge",
@@ -84,7 +84,7 @@ func Test_selectCheckoutMethod(t *testing.T) {
 		},
 		{
 			name: "PR - no fork - manual merge: branch and commit, no PRRepoURL or PRID",
-			cfg: Config{
+			cfg: CheckoutConfig{
 				Commit:        "76a934ae",
 				Branch:        "test/commit-messages",
 				PRDestBranch:  "master",
@@ -96,7 +96,7 @@ func Test_selectCheckoutMethod(t *testing.T) {
 		},
 		{
 			name: "PR - fork - manual merge",
-			cfg: Config{
+			cfg: CheckoutConfig{
 				RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
 				PRSourceRepositoryURL: "https://github.com/bitrise-io/other-repo.git",
 				Branch:                "test/commit-messages",
@@ -109,7 +109,7 @@ func Test_selectCheckoutMethod(t *testing.T) {
 		},
 		{
 			name: "PR - no fork - manual merge: repo is the same with different scheme",
-			cfg: Config{
+			cfg: CheckoutConfig{
 				RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
 				PRSourceRepositoryURL: "git@github.com:bitrise-io/git-clone-test.git",
 				Branch:                "test/commit-messages",
@@ -124,7 +124,7 @@ func Test_selectCheckoutMethod(t *testing.T) {
 		},
 		{
 			name: "PR - no fork - auto merge - merge branch (GitHub format)",
-			cfg: Config{
+			cfg: CheckoutConfig{
 				PRDestBranch:  "master",
 				PRMergeBranch: "pull/5/merge",
 				ShouldMergePR: true,
@@ -133,7 +133,7 @@ func Test_selectCheckoutMethod(t *testing.T) {
 		},
 		{
 			name: "PR - no fork - auto merge - diff file",
-			cfg: Config{
+			cfg: CheckoutConfig{
 				RepositoryURL: "https://github.com/bitrise-io/git-clone-test.git",
 				PRDestBranch:  "master",
 				PRID:          7,
@@ -146,7 +146,7 @@ func Test_selectCheckoutMethod(t *testing.T) {
 		},
 		{
 			name: "PR - fork - auto merge - merge branch: private fork overrides manual merge flag",
-			cfg: Config{
+			cfg: CheckoutConfig{
 				RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
 				PRSourceRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
 				Branch:                "test/commit-messages",
@@ -161,7 +161,7 @@ func Test_selectCheckoutMethod(t *testing.T) {
 		},
 		{
 			name: "PR - fork - auto merge: private fork overrides manual merge flag",
-			cfg: Config{
+			cfg: CheckoutConfig{
 				RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
 				PRSourceRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
 				Branch:                "test/commit-messages",
@@ -176,7 +176,7 @@ func Test_selectCheckoutMethod(t *testing.T) {
 		},
 		{
 			name: "PR - no merge - no fork - auto merge - head branch",
-			cfg: Config{
+			cfg: CheckoutConfig{
 				Commit:        "76a934ae",
 				Branch:        "test/commit-messages",
 				PRMergeBranch: "pull/7/merge",
@@ -190,7 +190,7 @@ func Test_selectCheckoutMethod(t *testing.T) {
 		},
 		{
 			name: "PR - no merge - no fork - manual merge",
-			cfg: Config{
+			cfg: CheckoutConfig{
 				Commit:        "76a934ae",
 				Branch:        "test/commit-messages",
 				PRDestBranch:  "master",
@@ -202,7 +202,7 @@ func Test_selectCheckoutMethod(t *testing.T) {
 		},
 		{
 			name: "PR - no merge - no fork - diff file exists",
-			cfg: Config{
+			cfg: CheckoutConfig{
 				RepositoryURL: "https://github.com/bitrise-io/git-clone-test.git",
 				Commit:        "76a934ae",
 				PRDestBranch:  "master",
@@ -215,7 +215,7 @@ func Test_selectCheckoutMethod(t *testing.T) {
 		},
 		{
 			name: "PR - no merge - fork - public fork",
-			cfg: Config{
+			cfg: CheckoutConfig{
 				RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
 				PRSourceRepositoryURL: "https://github.com/bitrise-io/other-repo.git",
 				Branch:                "test/commit-messages",
@@ -228,7 +228,7 @@ func Test_selectCheckoutMethod(t *testing.T) {
 		},
 		{
 			name: "PR - no merge - fork - auto merge - diff file: private fork",
-			cfg: Config{
+			cfg: CheckoutConfig{
 				RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
 				PRSourceRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
 				Branch:                "test/commit-messages",

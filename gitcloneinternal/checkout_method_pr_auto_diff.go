@@ -1,4 +1,4 @@
-package gitclone
+package gitcloneinternal
 
 import (
 	"fmt"
@@ -43,7 +43,7 @@ type checkoutPRDiffFile struct {
 
 func (c checkoutPRDiffFile) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
 	destBranchRef := refsHeadsPrefix + c.params.DestinationBranch
-	if err := fetch(gitCmd, originRemoteName, destBranchRef, fetchOptions); err != nil {
+	if err := fetch(gitCmd, OriginRemoteName, destBranchRef, fetchOptions); err != nil {
 		return err
 	}
 
@@ -51,7 +51,7 @@ func (c checkoutPRDiffFile) do(gitCmd git.Git, fetchOptions fetchOptions, fallba
 		return err
 	}
 
-	if err := runner.Run(gitCmd.Apply(c.patchFile)); err != nil {
+	if err := Runner.Run(gitCmd.Apply(c.patchFile)); err != nil {
 		log.Warnf("Could not apply patch (%s): %v", c.patchFile, err)
 		log.Warnf("Falling back to manual merge...")
 
@@ -69,9 +69,10 @@ type patchSource interface {
 	getDiffPath(buildURL, apiToken string) (string, error)
 }
 
-type defaultPatchSource struct{}
+// DefaultPatchSource ...
+type DefaultPatchSource struct{}
 
-func (defaultPatchSource) getDiffPath(buildURL, apiToken string) (string, error) {
+func (DefaultPatchSource) getDiffPath(buildURL, apiToken string) (string, error) {
 	url, err := url.Parse(buildURL)
 	if err != nil {
 		return "", fmt.Errorf("could not parse diff file URL: %v", err)

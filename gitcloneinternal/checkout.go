@@ -1,4 +1,4 @@
-package gitclone
+package gitcloneinternal
 
 import (
 	"fmt"
@@ -41,6 +41,57 @@ type ParameterValidationError struct {
 	ErrorString string
 }
 
+// CheckoutConfig is the git clone step configuration
+type CheckoutConfig struct {
+	RepositoryURL string `env:"repository_url,required"`
+	CloneIntoDir  string `env:"clone_into_dir,required"`
+
+	Commit string `env:"commit"`
+	Tag    string `env:"tag"`
+	Branch string `env:"branch"`
+
+	PRDestBranch          string `env:"branch_dest"`
+	PRID                  int    `env:"pull_request_id"`
+	PRSourceRepositoryURL string `env:"pull_request_repository_url"`
+	PRMergeBranch         string `env:"pull_request_merge_branch"`
+	PRHeadBranch          string `env:"pull_request_head_branch"`
+
+	CloneDepth        int      `env:"clone_depth"`
+	FetchTags         bool     `env:"fetch_tags,opt[yes,no]"`
+	SparseDirectories []string `env:"sparse_directories,multiline"`
+	ShouldMergePR     bool     `env:"merge_pr,opt[yes,no]"`
+	ManualMerge       bool     `env:"manual_merge,opt[yes,no]"`
+
+	ResetRepository bool `env:"reset_repository,opt[Yes,No]"`
+
+	UpdateSubmodules          bool `env:"update_submodules,opt[yes,no]"`
+	LimitSubmoduleUpdateDepth bool `env:"limit_submodule_update_depth,opt[yes,no]"`
+
+	BuildURL      string `env:"build_url"`
+	BuildAPIToken string `env:"build_api_token"`
+}
+
+// CheckoutState ...
+func CheckoutState(gitCmd git.Git, cfg CheckoutConfig, patch patchSource) error {
+	checkoutMethod, diffFile := selectCheckoutMethod(cfg, patch)
+	fetchOpts := selectFetchOptions(checkoutMethod, cfg.CloneDepth, cfg.FetchTags, cfg.UpdateSubmodules, len(cfg.SparseDirectories) != 0)
+
+	checkoutStrategy, err := createCheckoutStrategy(checkoutMethod, cfg, diffFile)
+	if err != nil {
+		return err
+	}
+	if checkoutStrategy == nil {
+		return fmt.Errorf("failed to select a checkout stategy")
+	}
+
+	if err := checkoutStrategy.do(gitCmd, fetchOpts, selectFallbacks(checkoutMethod, fetchOpts)); err != nil {
+		log.Infof("Checkout strategy used: %T", checkoutStrategy)
+		return err
+	}
+
+	return nil
+}
+
 // Error ...
 func (e ParameterValidationError) Error() string {
 	return e.ErrorString
@@ -71,7 +122,7 @@ type checkoutStrategy interface {
 // | headBranch  |        |     |        |          |  X         |           |
 // |=========================================================================|
 
-func selectCheckoutMethod(cfg Config, patch patchSource) (CheckoutMethod, string) {
+func selectCheckoutMethod(cfg CheckoutConfig, patch patchSource) (CheckoutMethod, string) {
 	isPR := cfg.PRSourceRepositoryURL != "" || cfg.PRDestBranch != "" || cfg.PRMergeBranch != "" || cfg.PRID != 0
 	if !isPR {
 		if cfg.Commit != "" {
@@ -151,7 +202,7 @@ func getPatchFile(patch patchSource, buildURL, buildAPIToken string) string {
 	return ""
 }
 
-func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile string) (checkoutStrategy, error) {
+func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg CheckoutConfig, patchFile string) (checkoutStrategy, error) {
 	switch checkoutMethod {
 	case CheckoutNoneMethod:
 		{

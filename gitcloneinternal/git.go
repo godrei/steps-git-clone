@@ -1,4 +1,4 @@
-package gitclone
+package gitcloneinternal
 
 import (
 	"fmt"
@@ -14,12 +14,26 @@ import (
 const (
 	checkoutFailedTag = "checkout_failed"
 	fetchFailedTag    = "fetch_failed"
-	jobsFlag          = "--jobs=10"
+	// UpdateSubmodelFailedTag ...
+	UpdateSubmodelFailedTag = "update_submodule_failed"
+	// SparseCheckoutFailedTag ...
+	SparseCheckoutFailedTag = "sparse_checkout_failed"
+	// JobsFlag ...
+	JobsFlag = "--jobs=10"
 )
 
-var runner CommandRunner = DefaultRunner{}
+const (
+	// OriginRemoteName ...
+	OriginRemoteName = "origin"
+	// ForkRemoteName ...
+	ForkRemoteName = "fork"
+)
 
-func isOriginPresent(gitCmd git.Git, dir, repoURL string) (bool, error) {
+// Runner ...
+var Runner CommandRunner = DefaultRunner{}
+
+// IsOriginPresent ...
+func IsOriginPresent(gitCmd git.Git, dir, repoURL string) (bool, error) {
 	absDir, err := pathutil.AbsPath(dir)
 	if err != nil {
 		return false, err
@@ -29,7 +43,7 @@ func isOriginPresent(gitCmd git.Git, dir, repoURL string) (bool, error) {
 	if exist, err := pathutil.IsDirExists(gitDir); err != nil {
 		return false, err
 	} else if exist {
-		remotes, err := runner.RunForOutput(gitCmd.RemoteList())
+		remotes, err := Runner.RunForOutput(gitCmd.RemoteList())
 		if err != nil {
 			return false, err
 		}
@@ -43,30 +57,18 @@ func isOriginPresent(gitCmd git.Git, dir, repoURL string) (bool, error) {
 	return false, nil
 }
 
-func resetRepo(gitCmd git.Git) error {
-	if err := runner.Run(gitCmd.Reset("--hard", "HEAD")); err != nil {
+// ResetRepo ...
+func ResetRepo(gitCmd git.Git) error {
+	if err := Runner.Run(gitCmd.Reset("--hard", "HEAD")); err != nil {
 		return err
 	}
-	if err := runner.Run(gitCmd.Clean("-x", "-d", "-f")); err != nil {
+	if err := Runner.Run(gitCmd.Clean("-x", "-d", "-f")); err != nil {
 		return err
 	}
-	if err := runner.Run(gitCmd.SubmoduleForeach(gitCmd.Reset("--hard", "HEAD"))); err != nil {
+	if err := Runner.Run(gitCmd.SubmoduleForeach(gitCmd.Reset("--hard", "HEAD"))); err != nil {
 		return err
 	}
-	return runner.Run(gitCmd.SubmoduleForeach(gitCmd.Clean("-x", "-d", "-f")))
-}
-
-func getCheckoutArg(commit, tag, branch string) string {
-	switch {
-	case commit != "":
-		return commit
-	case tag != "":
-		return tag
-	case branch != "":
-		return branch
-	default:
-		return ""
-	}
+	return Runner.Run(gitCmd.SubmoduleForeach(gitCmd.Clean("-x", "-d", "-f")))
 }
 
 func isFork(repoURL, prRepoURL string) bool {
@@ -123,10 +125,10 @@ type getAvailableBranches func() (map[string][]string, error)
 
 func listBranches(gitCmd git.Git) getAvailableBranches {
 	return func() (map[string][]string, error) {
-		if err := runner.Run(gitCmd.Fetch(jobsFlag)); err != nil {
+		if err := Runner.Run(gitCmd.Fetch(JobsFlag)); err != nil {
 			return nil, err
 		}
-		out, err := runner.RunForOutput(gitCmd.Branch("-r"))
+		out, err := Runner.RunForOutput(gitCmd.Branch("-r"))
 		if err != nil {
 			return nil, err
 		}
@@ -158,11 +160,11 @@ func handleCheckoutError(callback getAvailableBranches, tag string, err error, s
 	// We were checking out a branch (not tag or commit)
 	if branch != "" {
 		branchesByRemote, branchesErr := callback()
-		branches := branchesByRemote[originRemoteName]
+		branches := branchesByRemote[OriginRemoteName]
 		// There was no error grabbing the available branches
 		// And the current branch is not present in the list
 		if branchesErr == nil && !sliceutil.IsStringInSlice(branch, branches) {
-			return newStepErrorWithBranchRecommendations(
+			return NewStepErrorWithBranchRecommendations(
 				tag,
 				err,
 				shortMsg,
@@ -172,7 +174,7 @@ func handleCheckoutError(callback getAvailableBranches, tag string, err error, s
 		}
 	}
 
-	return newStepError(
+	return NewStepError(
 		tag,
 		err,
 		shortMsg,

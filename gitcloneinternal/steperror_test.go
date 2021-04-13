@@ -1,4 +1,4 @@
-package gitclone
+package gitcloneinternal
 
 import (
 	"errors"
@@ -82,7 +82,7 @@ fatal: Authentication failed for 'https://bitrise-io.git/'`)),
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := mapDetailedErrorRecommendation(updateSubmodelFailedTag, tt.errMsg); !reflect.DeepEqual(got, tt.want) {
+			if got := mapDetailedErrorRecommendation(UpdateSubmodelFailedTag, tt.errMsg); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("mapRecommendation() = %v, want %v", got, tt.want)
 			}
 		})
@@ -327,7 +327,7 @@ func Test_mapRecommendation(t *testing.T) {
 	}
 }
 
-func Test_newStepError(t *testing.T) {
+func Test_NewStepError(t *testing.T) {
 	type args struct {
 		tag      string
 		err      error
@@ -339,7 +339,7 @@ func Test_newStepError(t *testing.T) {
 		want *step.Error
 	}{
 		{
-			name: "newStepError without recommendation",
+			name: "NewStepError without recommendation",
 			args: args{
 				tag:      "test_tag",
 				err:      errors.New("fatal error"),
@@ -353,7 +353,7 @@ func Test_newStepError(t *testing.T) {
 			},
 		},
 		{
-			name: "newStepError with recommendation",
+			name: "NewStepError with recommendation",
 			args: args{
 				tag:      "fetch_failed",
 				err:      errors.New("Permission denied (publickey)"),
@@ -373,14 +373,14 @@ func Test_newStepError(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := newStepError(tt.args.tag, tt.args.err, tt.args.shortMsg); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("newStepError() = %v, want %v", got, tt.want)
+			if got := NewStepError(tt.args.tag, tt.args.err, tt.args.shortMsg); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NewStepError() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func Test_newStepErrorWithBranchRecommendations(t *testing.T) {
+func Test_NewStepErrorWithBranchRecommendations(t *testing.T) {
 	type args struct {
 		tag               string
 		err               error
@@ -394,7 +394,7 @@ func Test_newStepErrorWithBranchRecommendations(t *testing.T) {
 		want *step.Error
 	}{
 		{
-			name: "newStepErrorWithBranchRecommendations without available branches",
+			name: "NewStepErrorWithBranchRecommendations without available branches",
 			args: args{
 				tag:               "checkout_failed",
 				err:               errors.New("Generic error"),
@@ -416,7 +416,7 @@ func Test_newStepErrorWithBranchRecommendations(t *testing.T) {
 			},
 		},
 		{
-			name: "newStepErrorWithBranchRecommendations with available branches",
+			name: "NewStepErrorWithBranchRecommendations with available branches",
 			args: args{
 				tag:               "checkout_failed",
 				err:               errors.New("pathspec 'feature1' did not match any file(s) known to git"),
@@ -441,8 +441,8 @@ func Test_newStepErrorWithBranchRecommendations(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := newStepErrorWithBranchRecommendations(tt.args.tag, tt.args.err, tt.args.shortMsg, tt.args.currentBranch, tt.args.availableBranches); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("newStepErrorWithBranchRecommendations() = %v,want %v", got, tt.want)
+			if got := NewStepErrorWithBranchRecommendations(tt.args.tag, tt.args.err, tt.args.shortMsg, tt.args.currentBranch, tt.args.availableBranches); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NewStepErrorWithBranchRecommendations() = %v,want %v", got, tt.want)
 			}
 		})
 	}

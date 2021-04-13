@@ -1,4 +1,4 @@
-package gitclone
+package gitcloneinternal
 
 import (
 	"fmt"
@@ -40,7 +40,7 @@ type resetUnshallow struct {
 func (r resetUnshallow) do(gitCmd git.Git) error {
 	log.Infof("Resetting repository, then fetch with unshallow...")
 
-	if err := resetRepo(gitCmd); err != nil {
+	if err := ResetRepo(gitCmd); err != nil {
 		return fmt.Errorf("reset repository: %v", err)
 	}
 
@@ -48,7 +48,7 @@ func (r resetUnshallow) do(gitCmd git.Git) error {
 }
 
 func unshallowFetch(gitCmd git.Git, traits unshallowFetchOptions) error {
-	opts := []string{jobsFlag, "--unshallow"}
+	opts := []string{JobsFlag, "--unshallow"}
 	if traits.tags {
 		opts = append(opts, "--tags")
 	} else {
@@ -58,7 +58,7 @@ func unshallowFetch(gitCmd git.Git, traits unshallowFetchOptions) error {
 		opts = append(opts, "--no-recurse-submodules")
 	}
 
-	if err := runner.RunWithRetry(func() *command.Model {
+	if err := Runner.RunWithRetry(func() *command.Model {
 		return gitCmd.Fetch(opts...)
 	}); err != nil {
 		return fmt.Errorf("fetch failed: %v", err)
