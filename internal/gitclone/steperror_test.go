@@ -1,4 +1,4 @@
-package gitcloneinternal
+package gitclone
 
 import (
 	"errors"
@@ -123,7 +123,7 @@ func Test_mapRecommendation(t *testing.T) {
 		{
 			name: "fetch_failed generic error mapping",
 			args: args{
-				tag:    fetchFailedTag,
+				tag:    FetchFailedTag,
 				errMsg: "fetch failed, error: exit status 128",
 			},
 			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
@@ -134,7 +134,7 @@ func Test_mapRecommendation(t *testing.T) {
 		{
 			name: "fetch_failed permission denied (publickey) error mapping",
 			args: args{
-				tag:    fetchFailedTag,
+				tag:    FetchFailedTag,
 				errMsg: "Permission denied (publickey).",
 			},
 			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
@@ -145,7 +145,7 @@ func Test_mapRecommendation(t *testing.T) {
 		{
 			name: "fetch_failed permission denied (publickey,publickey,gssapi-keyex,gssapi-with-mic,password) error mapping",
 			args: args{
-				tag:    fetchFailedTag,
+				tag:    FetchFailedTag,
 				errMsg: "Permission denied (publickey,gssapi-keyex,gssapi-with-mic,password).",
 			},
 			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
@@ -156,7 +156,7 @@ func Test_mapRecommendation(t *testing.T) {
 		{
 			name: "fetch_failed could not find repository (fatal: repository 'http://localhost/repo.git' not found) error mapping",
 			args: args{
-				tag:    fetchFailedTag,
+				tag:    FetchFailedTag,
 				errMsg: "fatal: repository 'http://localhost/repo.git' not found",
 			},
 			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
@@ -167,7 +167,7 @@ func Test_mapRecommendation(t *testing.T) {
 		{
 			name: "fetch_failed could not find repository (fatal: 'totally.not.made.up' does not appear to be a git repository) error mapping",
 			args: args{
-				tag:    fetchFailedTag,
+				tag:    FetchFailedTag,
 				errMsg: "fatal: 'totally.not.made.up' does not appear to be a git repository",
 			},
 			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
@@ -178,7 +178,7 @@ func Test_mapRecommendation(t *testing.T) {
 		{
 			name: "fetch_failed could not find repository (fatal: https://www.youtube.com/channel/UCh0BVQAUkD3vr3WzmINFO5A/info/refs not valid: is this a git repository?) error mapping",
 			args: args{
-				tag:    fetchFailedTag,
+				tag:    FetchFailedTag,
 				errMsg: "fatal: https://www.youtube.com/channel/UCh0BVQAUkD3vr3WzmINFO5A/info/refs not valid: is this a git repository?",
 			},
 			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
@@ -189,7 +189,7 @@ func Test_mapRecommendation(t *testing.T) {
 		{
 			name: "fetch_failed could not access repository (remote: HTTP Basic: Access denied\nfatal: Authentication failed for 'https://localhost/repo.git') error mapping",
 			args: args{
-				tag:    fetchFailedTag,
+				tag:    FetchFailedTag,
 				errMsg: "remote: HTTP Basic: Access denied\nfatal: Authentication failed for 'https://localhost/repo.git'",
 			},
 			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
@@ -200,7 +200,7 @@ func Test_mapRecommendation(t *testing.T) {
 		{
 			name: "fetch_failed could not access repository (remote: Invalid username or password(.)\nfatal: Authentication failed for 'https://localhost/repo.git') error mapping",
 			args: args{
-				tag:    fetchFailedTag,
+				tag:    FetchFailedTag,
 				errMsg: "remote: Invalid username or password(.)\nfatal: Authentication failed for 'https://localhost/repo.git'",
 			},
 			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
@@ -211,7 +211,7 @@ func Test_mapRecommendation(t *testing.T) {
 		{
 			name: "fetch_failed could not access repository (Unauthorized) error mapping",
 			args: args{
-				tag:    fetchFailedTag,
+				tag:    FetchFailedTag,
 				errMsg: "Unauthorized",
 			},
 			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
@@ -222,7 +222,7 @@ func Test_mapRecommendation(t *testing.T) {
 		{
 			name: "fetch_failed could not access repository (Forbidden) error mapping",
 			args: args{
-				tag:    fetchFailedTag,
+				tag:    FetchFailedTag,
 				errMsg: "Forbidden",
 			},
 			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
@@ -233,7 +233,7 @@ func Test_mapRecommendation(t *testing.T) {
 		{
 			name: "fetch_failed could not access repository (fatal: unable to access 'https://git.something.com/group/repo.git/': Failed to connect to git.something.com port 443: Connection timed out) error mapping",
 			args: args{
-				tag:    fetchFailedTag,
+				tag:    FetchFailedTag,
 				errMsg: "fatal: unable to access 'https://git.something.com/group/repo.git/': Failed to connect to git.something.com port 443: Connection timed out",
 			},
 			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
@@ -244,7 +244,7 @@ func Test_mapRecommendation(t *testing.T) {
 		{
 			name: "fetch_failed could not access repository (fatal: unable to access 'https://github.com/group/repo.git)/': The requested URL returned error: 400) error mapping",
 			args: args{
-				tag:    fetchFailedTag,
+				tag:    FetchFailedTag,
 				errMsg: "fatal: unable to access 'https://github.com/group/repo.git)/': The requested URL returned error: 400",
 			},
 			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
@@ -255,7 +255,7 @@ func Test_mapRecommendation(t *testing.T) {
 		{
 			name: "fetch_failed could not connect (ssh: connect to host git.something.com.outer port 22: Connection timed out) error mapping",
 			args: args{
-				tag:    fetchFailedTag,
+				tag:    FetchFailedTag,
 				errMsg: "ssh: connect to host git.something.com port 22: Connection timed out) error mapping",
 			},
 			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
@@ -266,7 +266,7 @@ func Test_mapRecommendation(t *testing.T) {
 		{
 			name: "fetch_failed could not connect (ssh: connect to host git.something.com.outer port 22: Connection refused) error mapping",
 			args: args{
-				tag:    fetchFailedTag,
+				tag:    FetchFailedTag,
 				errMsg: "ssh: connect to host git.something.com port 22: Connection refused) error mapping",
 			},
 			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
@@ -277,7 +277,7 @@ func Test_mapRecommendation(t *testing.T) {
 		{
 			name: "fetch_failed could not connect (ssh: connect to host git.something.com.outer port 22: Network is unreachable) error mapping",
 			args: args{
-				tag:    fetchFailedTag,
+				tag:    FetchFailedTag,
 				errMsg: "ssh: connect to host git.something.com port 22: Network is unreachable) error mapping",
 			},
 			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
@@ -288,7 +288,7 @@ func Test_mapRecommendation(t *testing.T) {
 		{
 			name: "fetch_failed could not connect (ssh: Could not resolve hostname git.something.com: Name or service not known) error mapping",
 			args: args{
-				tag:    fetchFailedTag,
+				tag:    FetchFailedTag,
 				errMsg: "ssh: Could not resolve hostname git.something.com: Name or service not known",
 			},
 			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
@@ -299,7 +299,7 @@ func Test_mapRecommendation(t *testing.T) {
 		{
 			name: "fetch_failed could not connect (fatal: unable to access 'https://site.google.com/view/something/': Could not resolve host: site.google.com) error mapping",
 			args: args{
-				tag:    fetchFailedTag,
+				tag:    FetchFailedTag,
 				errMsg: "fatal: unable to access 'https://site.google.com/view/something/': Could not resolve host: site.google.com"},
 			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
 				Title:       "We couldn’t connect to 'site.google.com'.",
@@ -309,7 +309,7 @@ func Test_mapRecommendation(t *testing.T) {
 		{
 			name: "fetch_failed SAML SSO enforced (ERROR: The `my-company' organization has enabled or enforced SAML SSO) error mapping",
 			args: args{
-				tag:    fetchFailedTag,
+				tag:    FetchFailedTag,
 				errMsg: "ERROR: The `my-company' organization has enabled or enforced SAML SSO",
 			},
 			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{

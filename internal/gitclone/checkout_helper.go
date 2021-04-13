@@ -1,4 +1,4 @@
-package gitcloneinternal
+package gitclone
 
 import (
 	"fmt"
@@ -70,7 +70,7 @@ func fetch(gitCmd git.Git, remote string, ref string, traits fetchOptions) error
 	}); err != nil {
 		return handleCheckoutError(
 			listBranches(gitCmd),
-			fetchFailedTag,
+			FetchFailedTag,
 			fmt.Errorf("fetch failed: %v", err),
 			"Fetching repository has failed",
 			branch,

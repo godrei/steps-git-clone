@@ -1,4 +1,4 @@
-package gitcloneinternal
+package gitclone
 
 import (
 	"fmt"

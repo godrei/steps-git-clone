@@ -1,4 +1,4 @@
-package gitcloneinternal
+package gitclone
 
 import (
 	"fmt"
@@ -18,7 +18,7 @@ func mapDetailedErrorRecommendation(tag, errMsg string) step.Recommendation {
 		matcher = newCheckoutFailedPatternErrorMatcher()
 	case UpdateSubmodelFailedTag:
 		matcher = newUpdateSubmoduleFailedErrorMatcher()
-	case fetchFailedTag:
+	case FetchFailedTag:
 		matcher = newFetchFailedPatternErrorMatcher()
 	}
 	if matcher != nil {

@@ -1,4 +1,4 @@
-package gitcloneinternal
+package gitclone
 
 import (
 	"fmt"
@@ -65,14 +65,16 @@ func (c checkoutPRDiffFile) do(gitCmd git.Git, fetchOptions fetchOptions, fallba
 	return detachHead(gitCmd)
 }
 
-type patchSource interface {
-	getDiffPath(buildURL, apiToken string) (string, error)
+// PatchSource ...
+type PatchSource interface {
+	GetDiffPath(buildURL, apiToken string) (string, error)
 }
 
 // DefaultPatchSource ...
 type DefaultPatchSource struct{}
 
-func (DefaultPatchSource) getDiffPath(buildURL, apiToken string) (string, error) {
+// GetDiffPath ...
+func (DefaultPatchSource) GetDiffPath(buildURL, apiToken string) (string, error) {
 	url, err := url.Parse(buildURL)
 	if err != nil {
 		return "", fmt.Errorf("could not parse diff file URL: %v", err)

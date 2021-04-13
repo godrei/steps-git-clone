@@ -1,4 +1,4 @@
-package gitcloneinternal
+package gitclone
 
 import "testing"
 
@@ -6,7 +6,7 @@ func Test_selectCheckoutMethod(t *testing.T) {
 	tests := []struct {
 		name        string
 		cfg         CheckoutConfig
-		patchSource patchSource
+		patchSource PatchSource
 		want        CheckoutMethod
 	}{
 		{
@@ -141,7 +141,7 @@ func Test_selectCheckoutMethod(t *testing.T) {
 				ShouldMergePR: true,
 				BuildURL:      "dummy_url",
 			},
-			patchSource: MockPatchSource{diffFilePath: "dummy_path"},
+			patchSource: MockPatchSource{DiffFilePath: "dummy_path"},
 			want:        CheckoutPRDiffFileMethod,
 		},
 		{
@@ -171,7 +171,7 @@ func Test_selectCheckoutMethod(t *testing.T) {
 				ManualMerge:           true,
 				ShouldMergePR:         true,
 			},
-			patchSource: MockPatchSource{diffFilePath: "dummy_path"},
+			patchSource: MockPatchSource{DiffFilePath: "dummy_path"},
 			want:        CheckoutPRDiffFileMethod,
 		},
 		{
@@ -210,7 +210,7 @@ func Test_selectCheckoutMethod(t *testing.T) {
 				ShouldMergePR: false,
 				BuildURL:      "dummy_url",
 			},
-			patchSource: MockPatchSource{diffFilePath: "dummy_path"},
+			patchSource: MockPatchSource{DiffFilePath: "dummy_path"},
 			want:        CheckoutCommitMethod,
 		},
 		{
@@ -239,7 +239,7 @@ func Test_selectCheckoutMethod(t *testing.T) {
 				ShouldMergePR:         false,
 				BuildURL:              "dummy_url",
 			},
-			patchSource: MockPatchSource{diffFilePath: "dummy_path"},
+			patchSource: MockPatchSource{DiffFilePath: "dummy_path"},
 			want:        CheckoutPRDiffFileMethod,
 		},
 	}

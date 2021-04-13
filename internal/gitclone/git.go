@@ -1,4 +1,4 @@
-package gitcloneinternal
+package gitclone
 
 import (
 	"fmt"
@@ -13,7 +13,8 @@ import (
 
 const (
 	checkoutFailedTag = "checkout_failed"
-	fetchFailedTag    = "fetch_failed"
+	// FetchFailedTag ...
+	FetchFailedTag = "fetch_failed"
 	// UpdateSubmodelFailedTag ...
 	UpdateSubmodelFailedTag = "update_submodule_failed"
 	// SparseCheckoutFailedTag ...

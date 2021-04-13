@@ -1,4 +1,4 @@
-package gitcloneinternal
+package gitclone
 
 import (
 	"errors"
@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+// MockRunner ...
 type MockRunner struct {
 	mock.Mock
 	cmds []string
@@ -14,7 +15,7 @@ type MockRunner struct {
 
 var errDummy = errors.New("dummy_cmd_error")
 
-// Cmds...
+// Cmds ...
 func (m *MockRunner) Cmds() []string {
 	return m.cmds
 }
@@ -64,7 +65,7 @@ func (m *MockRunner) RunWithRetry(getCommand func() *command.Model) error {
 	return args.Error(0)
 }
 
-// GivenRunWithRetrySucceedsAfter ...
+// GivenRunWithRetrySucceeds ...
 func (m *MockRunner) GivenRunWithRetrySucceeds() *MockRunner {
 	return m.GivenRunWithRetrySucceedsAfter(0)
 }
@@ -79,7 +80,7 @@ func (m *MockRunner) GivenRunWithRetrySucceedsAfter(times int) *MockRunner {
 	return m
 }
 
-// GivenRunWithRetryFails ...
+// GivenRunWithRetryFailsAfter ...
 func (m *MockRunner) GivenRunWithRetryFailsAfter(times int) *MockRunner {
 	m.On("RunWithRetry", mock.Anything).
 		Run(func(args mock.Arguments) {
@@ -111,4 +112,15 @@ func (m *MockRunner) rememberCommands(args mock.Arguments, times int) {
 
 func (m *MockRunner) isCommandMatching(command *command.Model, cmdString string) bool {
 	return command.PrintableCommandArgs() == cmdString
+}
+
+// MockPatchSource ..
+type MockPatchSource struct {
+	DiffFilePath string
+	Err          error
+}
+
+// GetDiffPath ...
+func (m MockPatchSource) GetDiffPath(_, _ string) (string, error) {
+	return m.DiffFilePath, m.Err
 }

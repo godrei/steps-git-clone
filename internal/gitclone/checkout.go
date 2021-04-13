@@ -1,4 +1,4 @@
-package gitcloneinternal
+package gitclone
 
 import (
 	"fmt"
@@ -72,7 +72,7 @@ type CheckoutConfig struct {
 }
 
 // CheckoutState ...
-func CheckoutState(gitCmd git.Git, cfg CheckoutConfig, patch patchSource) error {
+func CheckoutState(gitCmd git.Git, cfg CheckoutConfig, patch PatchSource) error {
 	checkoutMethod, diffFile := selectCheckoutMethod(cfg, patch)
 	fetchOpts := selectFetchOptions(checkoutMethod, cfg.CloneDepth, cfg.FetchTags, cfg.UpdateSubmodules, len(cfg.SparseDirectories) != 0)
 
@@ -122,7 +122,7 @@ type checkoutStrategy interface {
 // | headBranch  |        |     |        |          |  X         |           |
 // |=========================================================================|
 
-func selectCheckoutMethod(cfg CheckoutConfig, patch patchSource) (CheckoutMethod, string) {
+func selectCheckoutMethod(cfg CheckoutConfig, patch PatchSource) (CheckoutMethod, string) {
 	isPR := cfg.PRSourceRepositoryURL != "" || cfg.PRDestBranch != "" || cfg.PRMergeBranch != "" || cfg.PRID != 0
 	if !isPR {
 		if cfg.Commit != "" {
@@ -189,9 +189,9 @@ func selectCheckoutMethod(cfg CheckoutConfig, patch patchSource) (CheckoutMethod
 	return CheckoutPRManualMergeMethod, ""
 }
 
-func getPatchFile(patch patchSource, buildURL, buildAPIToken string) string {
+func getPatchFile(patch PatchSource, buildURL, buildAPIToken string) string {
 	if patch != nil {
-		patchFile, err := patch.getDiffPath(buildURL, buildAPIToken)
+		patchFile, err := patch.GetDiffPath(buildURL, buildAPIToken)
 		if err != nil {
 			log.Warnf("Diff file unavailable: %v", err)
 		} else {

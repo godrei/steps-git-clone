@@ -1,4 +1,4 @@
-package gitcloneinternal
+package gitclone
 
 import (
 	"errors"
@@ -7,6 +7,7 @@ import (
 
 	"github.com/bitrise-io/bitrise-init/step"
 	"github.com/bitrise-io/go-utils/command/git"
+	"github.com/bitrise-steplib/steps-git-clone/internal/gitclone"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -14,9 +15,9 @@ const rawCmdError = "dummy_cmd_error"
 
 var testCases = [...]struct {
 	name        string
-	cfg         CheckoutConfig
-	patchSource patchSource
-	mockRunner  *MockRunner
+	cfg         gitclone.CheckoutConfig
+	patchSource gitclone.PatchSource
+	mockRunner  *gitclone.MockRunner
 	wantErr     error
 	wantErrType error
 	wantCmds    []string
@@ -24,12 +25,12 @@ var testCases = [...]struct {
 	// ** Simple checkout cases (using commit, tag and branch) **
 	{
 		name:     "No checkout args",
-		cfg:      CheckoutConfig{},
+		cfg:      gitclone.CheckoutConfig{},
 		wantCmds: nil,
 	},
 	{
 		name: "Checkout commit",
-		cfg: CheckoutConfig{
+		cfg: gitclone.CheckoutConfig{
 			Commit:     "76a934a",
 			CloneDepth: 1,
 		},
@@ -40,7 +41,7 @@ var testCases = [...]struct {
 	},
 	{
 		name: "Checkout commit, branch specified",
-		cfg: CheckoutConfig{
+		cfg: gitclone.CheckoutConfig{
 			Commit:    "76a934ae",
 			Branch:    "hcnarb",
 			FetchTags: true,
@@ -52,7 +53,7 @@ var testCases = [...]struct {
 	},
 	{
 		name: "Checkout commit with retry",
-		cfg: CheckoutConfig{
+		cfg: gitclone.CheckoutConfig{
 			Commit: "76a934ae",
 		},
 		mockRunner: givenMockRunnerSucceedsAfter(1),
@@ -64,7 +65,7 @@ var testCases = [...]struct {
 	},
 	{
 		name: "Checkout branch",
-		cfg: CheckoutConfig{
+		cfg: gitclone.CheckoutConfig{
 			Branch:     "hcnarb",
 			CloneDepth: 1,
 		},
@@ -76,7 +77,7 @@ var testCases = [...]struct {
 	},
 	{
 		name: "Checkout tag",
-		cfg: CheckoutConfig{
+		cfg: gitclone.CheckoutConfig{
 			Tag:        "gat",
 			CloneDepth: 1,
 		},
@@ -87,7 +88,7 @@ var testCases = [...]struct {
 	},
 	{
 		name: "Checkout tag, branch specifed",
-		cfg: CheckoutConfig{
+		cfg: gitclone.CheckoutConfig{
 			Tag: "gat",
 		},
 		wantCmds: []string{
@@ -97,7 +98,7 @@ var testCases = [...]struct {
 	},
 	{
 		name: "Checkout tag, branch specifed has same name as tag",
-		cfg: CheckoutConfig{
+		cfg: gitclone.CheckoutConfig{
 			Tag: "gat",
 		},
 		wantCmds: []string{
@@ -107,7 +108,7 @@ var testCases = [...]struct {
 	},
 	{
 		name: "UNSUPPORTED Checkout commit, tag, branch specifed",
-		cfg: CheckoutConfig{
+		cfg: gitclone.CheckoutConfig{
 			Commit: "76a934ae",
 			Tag:    "gat",
 			Branch: "hcnarb",
@@ -119,7 +120,7 @@ var testCases = [...]struct {
 	},
 	{
 		name: "UNSUPPORTED Checkout commit, tag specifed",
-		cfg: CheckoutConfig{
+		cfg: gitclone.CheckoutConfig{
 			Commit: "76a934ae",
 			Tag:    "gat",
 		},
@@ -132,7 +133,7 @@ var testCases = [...]struct {
 	// ** PRs manual merge
 	{
 		name: "PR - no fork - manual merge: branch and commit",
-		cfg: CheckoutConfig{
+		cfg: gitclone.CheckoutConfig{
 			Commit:        "76a934ae",
 			Branch:        "test/commit-messages",
 			PRMergeBranch: "pull/7/merge",
@@ -153,7 +154,7 @@ var testCases = [...]struct {
 	},
 	{
 		name: "PR - no fork - manual merge: branch and commit, no PRRepoURL or PRID",
-		cfg: CheckoutConfig{
+		cfg: gitclone.CheckoutConfig{
 			Commit:        "76a934ae",
 			Branch:        "test/commit-messages",
 			PRDestBranch:  "master",
@@ -172,7 +173,7 @@ var testCases = [...]struct {
 	},
 	{
 		name: "PR - fork - manual merge",
-		cfg: CheckoutConfig{
+		cfg: gitclone.CheckoutConfig{
 			RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
 			PRSourceRepositoryURL: "https://github.com/bitrise-io/other-repo.git",
 			Branch:                "test/commit-messages",
@@ -195,7 +196,7 @@ var testCases = [...]struct {
 	},
 	{
 		name: "PR - no fork - manual merge: repo is the same with different scheme",
-		cfg: CheckoutConfig{
+		cfg: gitclone.CheckoutConfig{
 			RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
 			PRSourceRepositoryURL: "git@github.com:bitrise-io/git-clone-test.git",
 			Branch:                "test/commit-messages",
@@ -219,7 +220,7 @@ var testCases = [...]struct {
 	// ** PRs auto merge **
 	{
 		name: "PR - no fork - auto merge - merge branch (GitHub format)",
-		cfg: CheckoutConfig{
+		cfg: gitclone.CheckoutConfig{
 			PRDestBranch:  "master",
 			PRMergeBranch: "pull/5/merge",
 			PRHeadBranch:  "pull/5/head",
@@ -237,7 +238,7 @@ var testCases = [...]struct {
 	},
 	{
 		name: "PR - no fork - auto merge - merge branch (standard branch format)",
-		cfg: CheckoutConfig{
+		cfg: gitclone.CheckoutConfig{
 			PRDestBranch:  "master",
 			PRMergeBranch: "pr_test",
 			ShouldMergePR: true,
@@ -253,7 +254,7 @@ var testCases = [...]struct {
 	},
 	{
 		name: "PR - fork - auto merge - merge branch: private fork overrides manual merge flag",
-		cfg: CheckoutConfig{
+		cfg: gitclone.CheckoutConfig{
 			RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
 			PRSourceRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
 			Branch:                "test/commit-messages",
@@ -274,7 +275,7 @@ var testCases = [...]struct {
 	},
 	{
 		name: "PR - fork - auto merge - diff file: private fork overrides manual merge flag, Fails",
-		cfg: CheckoutConfig{
+		cfg: gitclone.CheckoutConfig{
 			RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
 			PRSourceRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
 			Branch:                "test/commit-messages",
@@ -285,7 +286,7 @@ var testCases = [...]struct {
 			BuildURL:              "dummy_url",
 			UpdateSubmodules:      true,
 		},
-		patchSource: MockPatchSource{"", errors.New(rawCmdError)},
+		patchSource: gitclone.MockPatchSource{"", errors.New(rawCmdError)},
 		mockRunner: givenMockRunner().
 			GivenRunWithRetryFailsAfter(2).
 			GivenRunSucceeds(),
@@ -300,7 +301,7 @@ var testCases = [...]struct {
 	},
 	{
 		name: "PR - fork - auto merge - diff file: private fork overrides manual merge flag",
-		cfg: CheckoutConfig{
+		cfg: gitclone.CheckoutConfig{
 			RepositoryURL: "https://github.com/bitrise-io/git-clone-test.git",
 			Branch:        "test/commit-messages",
 			PRDestBranch:  "master",
@@ -310,7 +311,7 @@ var testCases = [...]struct {
 			ShouldMergePR: true,
 			BuildURL:      "dummy_url",
 		},
-		patchSource: MockPatchSource{"diff_path", nil},
+		patchSource: gitclone.MockPatchSource{"diff_path", nil},
 		wantErr:     nil,
 		wantCmds: []string{
 			`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/master"`,
@@ -321,7 +322,7 @@ var testCases = [...]struct {
 	},
 	{
 		name: "PR - no fork - auto merge - diff file: fallback to manual merge if unable to apply patch",
-		cfg: CheckoutConfig{
+		cfg: gitclone.CheckoutConfig{
 			RepositoryURL: "https://github.com/bitrise-io/git-clone-test.git",
 			Branch:        "test/commit-messages",
 			PRDestBranch:  "master",
@@ -331,7 +332,7 @@ var testCases = [...]struct {
 			ShouldMergePR: true,
 			BuildURL:      "dummy_url",
 		},
-		patchSource: MockPatchSource{"diff_path", nil},
+		patchSource: gitclone.MockPatchSource{"diff_path", nil},
 		mockRunner: givenMockRunner().
 			GivenRunFailsForCommand(`git "apply" "--index" "diff_path"`, 1).
 			GivenRunWithRetrySucceeds().
@@ -351,7 +352,7 @@ var testCases = [...]struct {
 	},
 	{
 		name: "PR - fork - auto merge - diff file: fallback to manual merge if unable to apply patch",
-		cfg: CheckoutConfig{
+		cfg: gitclone.CheckoutConfig{
 			RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
 			PRSourceRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
 			Branch:                "test/commit-messages",
@@ -361,7 +362,7 @@ var testCases = [...]struct {
 			ShouldMergePR:         true,
 			BuildURL:              "dummy_url",
 		},
-		patchSource: MockPatchSource{"diff_path", nil},
+		patchSource: gitclone.MockPatchSource{"diff_path", nil},
 		mockRunner: givenMockRunner().
 			GivenRunFailsForCommand(`git "apply" "--index" "diff_path"`, 1).
 			GivenRunWithRetrySucceeds().
@@ -384,7 +385,7 @@ var testCases = [...]struct {
 	// PRs no merge
 	{
 		name: "PR - no merge - no fork - manual merge: branch and commit",
-		cfg: CheckoutConfig{
+		cfg: gitclone.CheckoutConfig{
 			Commit:           "76a934ae",
 			Branch:           "test/commit-messages",
 			PRDestBranch:     "master",
@@ -400,7 +401,7 @@ var testCases = [...]struct {
 	},
 	{
 		name: "PR - no merge - no fork - auto merge - head branch",
-		cfg: CheckoutConfig{
+		cfg: gitclone.CheckoutConfig{
 			Commit:           "76a934ae",
 			PRDestBranch:     "master",
 			PRMergeBranch:    "pull/5/merge",
@@ -416,7 +417,7 @@ var testCases = [...]struct {
 	},
 	{
 		name: "PR - no merge - no fork - auto merge - diff file: public fork",
-		cfg: CheckoutConfig{
+		cfg: gitclone.CheckoutConfig{
 			RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
 			PRSourceRepositoryURL: "https://github.com/bitrise-io/git-clone-test2.git",
 			Branch:                "test/commit-messages",
@@ -427,7 +428,7 @@ var testCases = [...]struct {
 			ShouldMergePR:         false,
 			UpdateSubmodules:      true,
 		},
-		patchSource: MockPatchSource{"diff_path", nil},
+		patchSource: gitclone.MockPatchSource{"diff_path", nil},
 		wantErr:     nil,
 		wantCmds: []string{
 			`git "remote" "add" "fork" "https://github.com/bitrise-io/git-clone-test2.git"`,
@@ -437,7 +438,7 @@ var testCases = [...]struct {
 	},
 	{
 		name: "PR - no merge - fork - auto merge - diff file: private fork",
-		cfg: CheckoutConfig{
+		cfg: gitclone.CheckoutConfig{
 			RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
 			PRSourceRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
 			Branch:                "test/commit-messages",
@@ -449,7 +450,7 @@ var testCases = [...]struct {
 			UpdateSubmodules:      true,
 			BuildURL:              "dummy_url",
 		},
-		patchSource: MockPatchSource{"diff_path", nil},
+		patchSource: gitclone.MockPatchSource{"diff_path", nil},
 		wantErr:     nil,
 		wantCmds: []string{
 			`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "origin" "refs/heads/master"`,
@@ -462,7 +463,7 @@ var testCases = [...]struct {
 	// ** Errors **
 	{
 		name: "Checkout nonexistent branch",
-		cfg: CheckoutConfig{
+		cfg: gitclone.CheckoutConfig{
 			Branch: "fake",
 		},
 		mockRunner: givenMockRunner().
@@ -475,8 +476,8 @@ var testCases = [...]struct {
 			`git "fetch" "--jobs=10"`,
 			`git "branch" "-r"`,
 		},
-		wantErr: NewStepErrorWithBranchRecommendations(
-			fetchFailedTag,
+		wantErr: gitclone.NewStepErrorWithBranchRecommendations(
+			gitclone.FetchFailedTag,
 			fmt.Errorf("fetch failed: %v", errors.New(rawCmdError)),
 			"Fetching repository has failed",
 			"fake",
@@ -485,21 +486,21 @@ var testCases = [...]struct {
 	},
 	{
 		name: "PR - no fork - auto merge: BranchDest missing (UNSUPPORTED)",
-		cfg: CheckoutConfig{
+		cfg: gitclone.CheckoutConfig{
 			Commit:        "76a934ae",
 			Branch:        "test/commit-messages",
 			PRMergeBranch: "pull/7/merge",
 			CloneDepth:    1,
 			ShouldMergePR: true,
 		},
-		wantErrType: ParameterValidationError{},
+		wantErrType: gitclone.ParameterValidationError{},
 		wantCmds:    nil,
 	},
 
 	// ** CloneDepth specified, Unshallow needed **
 	{
 		name: "Checkout commit, unshallow needed",
-		cfg: CheckoutConfig{
+		cfg: gitclone.CheckoutConfig{
 			Commit:           "cfba2b01332e31cb1568dbf3f22edce063118bae",
 			CloneDepth:       1,
 			UpdateSubmodules: true,
@@ -519,19 +520,19 @@ var testCases = [...]struct {
 	},
 	{
 		name: "PR - no fork - manual merge: branch, no commit (ignore depth) UNSUPPORTED?",
-		cfg: CheckoutConfig{
+		cfg: gitclone.CheckoutConfig{
 			Branch:        "test/commit-messages",
 			PRMergeBranch: "pull/7/merge",
 			PRDestBranch:  "master",
 			ManualMerge:   true,
 			ShouldMergePR: true,
 		},
-		wantErrType: ParameterValidationError{},
+		wantErrType: gitclone.ParameterValidationError{},
 		wantCmds:    nil,
 	},
 	{
 		name: "Checkout PR - auto merge - merge branch, with depth (unshallow needed)",
-		cfg: CheckoutConfig{
+		cfg: gitclone.CheckoutConfig{
 			PRDestBranch:  "master",
 			PRMergeBranch: "pull/5/merge",
 			PRHeadBranch:  "pull/5/head",
@@ -563,7 +564,7 @@ var testCases = [...]struct {
 	// ** Sparse-checkout **
 	{
 		name: "Checkout commit - sparse",
-		cfg: CheckoutConfig{
+		cfg: gitclone.CheckoutConfig{
 			Commit:            "76a934a",
 			CloneDepth:        1,
 			SparseDirectories: []string{"client/android"},
@@ -575,7 +576,7 @@ var testCases = [...]struct {
 	},
 	{
 		name: "Checkout commit, branch specified - sparse",
-		cfg: CheckoutConfig{
+		cfg: gitclone.CheckoutConfig{
 			Commit:            "76a934ae",
 			Branch:            "hcnarb",
 			SparseDirectories: []string{"client/android"},
@@ -587,7 +588,7 @@ var testCases = [...]struct {
 	},
 	{
 		name: "Checkout branch - sparse",
-		cfg: CheckoutConfig{
+		cfg: gitclone.CheckoutConfig{
 			Branch:            "hcnarb",
 			CloneDepth:        1,
 			SparseDirectories: []string{"client/android"},
@@ -600,7 +601,7 @@ var testCases = [...]struct {
 	},
 	{
 		name: "Checkout tag - sparse",
-		cfg: CheckoutConfig{
+		cfg: gitclone.CheckoutConfig{
 			Tag:               "gat",
 			CloneDepth:        1,
 			SparseDirectories: []string{"client/android"},
@@ -616,16 +617,16 @@ func Test_CheckoutState(t *testing.T) {
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
 			// Given
-			var mockRunner *MockRunner
+			var mockRunner *gitclone.MockRunner
 			if tt.mockRunner != nil {
 				mockRunner = tt.mockRunner
 			} else {
 				mockRunner = givenMockRunnerSucceeds()
 			}
-			Runner = mockRunner
+			gitclone.Runner = mockRunner
 
 			// When
-			actualErr := CheckoutState(git.Git{}, tt.cfg, tt.patchSource)
+			actualErr := gitclone.CheckoutState(git.Git{}, tt.cfg, tt.patchSource)
 
 			// Then
 			if tt.wantErrType != nil {
@@ -644,12 +645,12 @@ func Test_CheckoutState(t *testing.T) {
 // SubmoduleUpdate
 var submoduleTestCases = [...]struct {
 	name     string
-	cfg      CheckoutConfig
+	cfg      gitclone.CheckoutConfig
 	wantCmds []string
 }{
 	{
 		name: "Limiting submodule depth",
-		cfg: CheckoutConfig{
+		cfg: gitclone.CheckoutConfig{
 			LimitSubmoduleUpdateDepth: true,
 		},
 		wantCmds: []string{
@@ -658,7 +659,7 @@ var submoduleTestCases = [...]struct {
 	},
 	{
 		name: "Not limiting submodule depth",
-		cfg: CheckoutConfig{
+		cfg: gitclone.CheckoutConfig{
 			LimitSubmoduleUpdateDepth: false,
 		},
 		wantCmds: []string{
@@ -672,10 +673,10 @@ func Test_SubmoduleUpdate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Given
 			mockRunner := givenMockRunnerSucceeds()
-			Runner = mockRunner
+			gitclone.Runner = mockRunner
 
 			// When
-			actualErr := UpdateSubmodules(git.Git{}, tt.cfg)
+			actualErr := gitclone.UpdateSubmodules(git.Git{}, tt.cfg)
 
 			// Then
 			assert.NoError(t, actualErr)
@@ -713,10 +714,10 @@ func Test_SetupSparseCheckout(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Given
 			mockRunner := givenMockRunnerSucceeds()
-			Runner = mockRunner
+			gitclone.Runner = mockRunner
 
 			// When
-			actualErr := SetupSparseCheckout(git.Git{}, tt.sparseDirectories)
+			actualErr := gitclone.SetupSparseCheckout(git.Git{}, tt.sparseDirectories)
 
 			// Then
 			assert.NoError(t, actualErr)
@@ -726,27 +727,18 @@ func Test_SetupSparseCheckout(t *testing.T) {
 }
 
 // Mocks
-func givenMockRunner() *MockRunner {
-	mockRunner := new(MockRunner)
+func givenMockRunner() *gitclone.MockRunner {
+	mockRunner := new(gitclone.MockRunner)
 	mockRunner.GivenRunForOutputSucceeds()
 	return mockRunner
 }
 
-func givenMockRunnerSucceeds() *MockRunner {
+func givenMockRunnerSucceeds() *gitclone.MockRunner {
 	return givenMockRunnerSucceedsAfter(0)
 }
 
-func givenMockRunnerSucceedsAfter(times int) *MockRunner {
+func givenMockRunnerSucceedsAfter(times int) *gitclone.MockRunner {
 	return givenMockRunner().
 		GivenRunWithRetrySucceedsAfter(times).
 		GivenRunSucceeds()
-}
-
-type MockPatchSource struct {
-	diffFilePath string
-	err          error
-}
-
-func (m MockPatchSource) getDiffPath(_, _ string) (string, error) {
-	return m.diffFilePath, m.err
 }
